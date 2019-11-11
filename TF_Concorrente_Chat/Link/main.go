@@ -81,6 +81,7 @@ func (module PP2PLink) Start(address string) {
 
 					if !strings.Contains(string(content), "@$@"){
 						fmt.Println("WHY")
+						//fmt.Println(string(content))
 					}
 
 					for _,actual := range strings.Split(string(content), "@$@"){
