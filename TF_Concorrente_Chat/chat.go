@@ -1,84 +1,100 @@
-
 // Gabriel Bonatto Justo e Gabriel Pereira Paiz
 
 package main
 
-import "fmt"
-import "os"
-import "bufio"
-import "time"
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"time"
 
-import BEB "./BEB"
+	BEB "./BEB"
+)
 
+//Send from BEB
+func Send(block chan struct{}, module BEB.BestEffortBroadcast_Module, ads []string) {
+	for {
 
-func Send (block chan struct{}, module BEB.BestEffortBroadcast_Module, ads []string) {
-	for{
 		reader := bufio.NewReader(os.Stdin)
 		message, _ := reader.ReadString('\n')
 
-		send_message := BEB.BestEffortBroadcast_Req_Message{
-			Addresses : ads[1:],
-			Message : message}
+		sendMessage := BEB.BestEffortBroadcast_Req_Message{
+			Addresses: ads[1:],
+			Message:   message}
 
-		module.Req <- send_message
+		module.Req <- sendMessage
 	}
-	
-	
+
 }
 
-func Recv (module BEB.BestEffortBroadcast_Module, ads []string){
-	for{
-		recv_message := <- module.Ind
-		fmt.Println(recv_message.From, ": ", recv_message.Message)
+//Recv from BEB
+func Recv(module BEB.BestEffortBroadcast_Module, ads []string) {
+	for {
+		recvMessage := <-module.Ind
+		aux := false
+		for i := 1; i < len(ads); i++ {
+			if ads[i] == recvMessage.Message[2:] {
+				aux = true
+			}
+		}
+
+		if recvMessage.Message[0:2] == "PP" && ads[1] != recvMessage.Message[2:] && !aux {
+			fmt.Println("Teste")
+			ads = append(ads, recvMessage.Message[2:])
+			sendPara := BEB.BestEffortBroadcast_Req_Message{
+				Addresses: ads[1:],
+				Message:   "Adicionei 1\n"}
+			module.Req <- sendPara
+		}
+
+		fmt.Println(recvMessage.From, ": ", recvMessage.Message)
 	}
-	
+
 }
 
-
-
-
-
-
-func join (module BEB.BestEffortBroadcast_Module, ads []string){
+func join(module BEB.BestEffortBroadcast_Module, ads []string) {
 	message := ads[0] + " entrou no chat"
 
-	send_message := BEB.BestEffortBroadcast_Req_Message{
-		Addresses : ads[1:],
-		Message : message}
+	perm := "PP" + ads[0]
 
-	module.Req <- send_message
+	sendPermission := BEB.BestEffortBroadcast_Req_Message{
+		Addresses: ads[1:2],
+		Message:   perm}
+	module.Req <- sendPermission
+
+	sendMessage := BEB.BestEffortBroadcast_Req_Message{
+		Addresses: ads[1:],
+		Message:   message}
+
+	module.Req <- sendMessage
 }
 
 func main() {
 
+	if len(os.Args) < 2 {
+		fmt.Println("Please specify at least two address:port!")
+		return
+	}
 
-	 if len(os.Args) < 2 {
-	 	fmt.Println("Please specify at least two address:port!")
-	 	return
-	 }
+	users := os.Args[1:]
+	fmt.Println("users : ", users)
 
-	 users := os.Args[1:]
-	 fmt.Println("users : ", users)
+	beb := BEB.BestEffortBroadcast_Module{
+		Ind: make(chan BEB.BestEffortBroadcast_Ind_Message),
+		Req: make(chan BEB.BestEffortBroadcast_Req_Message)}
 
+	beb.Init(users[0])
 
-	 beb := BEB.BestEffortBroadcast_Module {
-		Ind : make(chan BEB.BestEffortBroadcast_Ind_Message),
-		Req : make(chan BEB.BestEffortBroadcast_Req_Message)}
+	block := make(chan struct{})
 
-	 beb.Init(users[0])
+	go join(beb, users)
 
-	 block := make(chan struct{})
-
-	 go join(beb, users)
-	 
-		 
 	go Send(block, beb, users)
 	go Recv(beb, users)
 
-	for{
+	for {
 		time.Sleep(2 * time.Second)
 	}
-
 
 }
 
@@ -87,5 +103,7 @@ func main() {
 go run chat.go 127.0.0.1:5001  127.0.0.1:6001
 
 go run chat.go 127.0.0.1:6001  127.0.0.1:5001
+
+go run chat.go 127.0.0.1:4001  127.0.0.1:6001
 
 */
