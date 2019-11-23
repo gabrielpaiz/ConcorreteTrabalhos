@@ -12,14 +12,14 @@ import (
 )
 
 //Send from BEB
-func Send(block chan struct{}, module BEB.BestEffortBroadcast_Module, ads []string) {
+func Send(block chan struct{}, module BEB.BestEffortBroadcast_Module, ads *[]string) {
 	for {
 
 		reader := bufio.NewReader(os.Stdin)
 		message, _ := reader.ReadString('\n')
 
 		sendMessage := BEB.BestEffortBroadcast_Req_Message{
-			Addresses: ads[1:],
+			Addresses: (*ads)[1:],
 			Message:   message}
 
 		module.Req <- sendMessage
@@ -28,24 +28,26 @@ func Send(block chan struct{}, module BEB.BestEffortBroadcast_Module, ads []stri
 }
 
 //Recv from BEB
-func Recv(module BEB.BestEffortBroadcast_Module, ads []string) {
+func Recv(module BEB.BestEffortBroadcast_Module, ads *[]string) {
 	for {
 		recvMessage := <-module.Ind
 		aux := false
-		for i := 1; i < len(ads); i++ {
-			if ads[i] == recvMessage.Message[2:] {
+
+		for i := 1; i < len(*ads); i++ {
+			if (*ads)[i] == recvMessage.Message[2:] {
 				aux = true
 			}
 		}
 
-		if recvMessage.Message[0:2] == "PP" && ads[1] != recvMessage.Message[2:] && !aux {
+		if recvMessage.Message[0:2] == "PP" && (*ads)[1] != recvMessage.Message[2:] && !aux {
 			fmt.Println("Teste")
-			ads = append(ads, recvMessage.Message[2:])
+			*ads = append((*ads), recvMessage.Message[2:])
 			sendPara := BEB.BestEffortBroadcast_Req_Message{
-				Addresses: ads[1:],
+				Addresses: (*ads)[1:],
 				Message:   "Adicionei 1\n"}
 			module.Req <- sendPara
 		}
+		fmt.Println("\n\nPorteiro: *ads[0] ", (*ads)[len(*ads)-1], "\n\n")
 
 		fmt.Println(recvMessage.From, ": ", recvMessage.Message)
 	}
@@ -53,7 +55,7 @@ func Recv(module BEB.BestEffortBroadcast_Module, ads []string) {
 }
 
 func join(module BEB.BestEffortBroadcast_Module, ads []string) {
-	message := ads[0] + " entrou no chat"
+	message := "\n" + ads[0] + " entrou no chat\n"
 
 	perm := "PP" + ads[0]
 
@@ -89,8 +91,8 @@ func main() {
 
 	go join(beb, users)
 
-	go Send(block, beb, users)
-	go Recv(beb, users)
+	go Send(block, beb, &users)
+	go Recv(beb, &users)
 
 	for {
 		time.Sleep(2 * time.Second)
