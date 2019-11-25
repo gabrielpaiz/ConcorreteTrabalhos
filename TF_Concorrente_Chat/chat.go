@@ -12,6 +12,7 @@ import (
 )
 
 //Send from BEB
+//Função que Faz o Envio de Mensagem
 func Send(block chan struct{}, module BEB.BestEffortBroadcast_Module, ads *[]string) {
 	for {
 
@@ -28,20 +29,24 @@ func Send(block chan struct{}, module BEB.BestEffortBroadcast_Module, ads *[]str
 }
 
 //Recv from BEB
+//Função que Faz Recebimento da Mensagem
 func Recv(module BEB.BestEffortBroadcast_Module, ads *[]string) {
 	for {
 		recvMessage := <-module.Ind
-		aux := false
+		aux := true
 
+		//Verifica se o endereço já existe no vetor ads
 		for i := 1; i < len(*ads); i++ {
 			if (*ads)[i] == recvMessage.Message[2:] {
-				aux = true
+				aux = false
 			}
 		}
 
-		if recvMessage.Message[0:2] == "PP" && (*ads)[1] != recvMessage.Message[2:] && !aux {
+		// Verifica se a menssagem recebida éde um novo usuario
+		if recvMessage.Message[0:2] == "PP" && (*ads)[1] != recvMessage.Message[2:] && aux {
 			fmt.Println("Teste")
 			*ads = append((*ads), recvMessage.Message[2:])
+
 			sendPara := BEB.BestEffortBroadcast_Req_Message{
 				Addresses: (*ads)[1:],
 				Message:   "Adicionei 1\n"}
@@ -54,6 +59,7 @@ func Recv(module BEB.BestEffortBroadcast_Module, ads *[]string) {
 
 }
 
+// Funcção de entrada
 func join(module BEB.BestEffortBroadcast_Module, ads []string) {
 	message := "\n" + ads[0] + " entrou no chat\n"
 
