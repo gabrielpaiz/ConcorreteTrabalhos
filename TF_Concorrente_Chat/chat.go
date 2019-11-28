@@ -49,7 +49,7 @@ func Recv(module BEB.BestEffortBroadcast_Module, ads *[]string) {
 		if recvMessage.Message[0:2] == "PP" && aux {
 			//fmt.Println("Teste")
 			*ads = append((*ads), recvMessage.Message[2:])
-
+			fmt.Println("ads: ",(*ads))
 			sendPara := BEB.BestEffortBroadcast_Req_Message{
 				Addresses: (*ads)[1:],
 				Message:   recvMessage.Message}
@@ -64,20 +64,26 @@ func Recv(module BEB.BestEffortBroadcast_Module, ads *[]string) {
 
 // Funcção de entrada
 func join(module BEB.BestEffortBroadcast_Module, ads []string) {
-	message := "\n" + ads[0] + " entrou no chat\n"
+	//message := "\n" + ads[0] + " entrou no chat\n"
 
 	perm := "PP" + ads[0]
+	/*sendMessage := BEB.BestEffortBroadcast_Req_Message{
+		Addresses: ads[1:],
+		Message:   message}
 
+	module.Req <- sendMessage
+
+	time.Sleep( 50* time.Millisecond)
+*/
 	sendPermission := BEB.BestEffortBroadcast_Req_Message{
 		Addresses: ads[1:2],
 		Message:   perm}
 	module.Req <- sendPermission
 
-	sendMessage := BEB.BestEffortBroadcast_Req_Message{
-		Addresses: ads[1:],
-		Message:   message}
 
-	module.Req <- sendMessage
+	
+
+
 }
 
 func main() {
@@ -98,7 +104,7 @@ func main() {
 
 	block := make(chan struct{})
 
-	go join(beb, users)
+	join(beb, users)
 
 	go Send(block, beb, &users)
 	go Recv(beb, &users)
