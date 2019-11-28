@@ -37,22 +37,25 @@ func Recv(module BEB.BestEffortBroadcast_Module, ads *[]string) {
 
 		//Verifica se o endereço já existe no vetor ads
 		for i := 1; i < len(*ads); i++ {
+			//fmt.Println("mesage[1:]: ", recvMessage.Message[2:])
+			//fmt.Println("ads[i]: ", (*ads)[i])
 			if (*ads)[i] == recvMessage.Message[2:] {
+				fmt.Println("entrei no if")
 				aux = false
 			}
 		}
 
-		// Verifica se a menssagem recebida éde um novo usuario
-		if recvMessage.Message[0:2] == "PP" && (*ads)[1] != recvMessage.Message[2:] && aux {
-			fmt.Println("Teste")
+		// Verifica se a menssagem recebida é de um novo usuario
+		if recvMessage.Message[0:2] == "PP" && aux {
+			//fmt.Println("Teste")
 			*ads = append((*ads), recvMessage.Message[2:])
 
 			sendPara := BEB.BestEffortBroadcast_Req_Message{
 				Addresses: (*ads)[1:],
-				Message:   "Adicionei 1\n"}
+				Message:   recvMessage.Message}
 			module.Req <- sendPara
 		}
-		fmt.Println("\n\nPorteiro: *ads[0] ", (*ads)[len(*ads)-1], "\n\n")
+		//fmt.Println("\n\nPorteiro: *ads[0] ", (*ads)[len(*ads)-1], "\n\n")
 
 		fmt.Println(recvMessage.From, ": ", recvMessage.Message)
 	}
