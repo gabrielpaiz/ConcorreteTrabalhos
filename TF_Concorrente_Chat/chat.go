@@ -37,7 +37,7 @@ func Recv(module BEB.BestEffortBroadcast_Module, ads *[]string, messages *[]stri
 		aux := true
 
 		//Verifica se o endereço já existe no vetor ads
-		for i := 1; i < len(*ads); i++ {
+		for i := 0; i < len(*ads); i++ {
 			if (*ads)[i] == recvMessage.Message[2:] {
 				aux = false
 			}
@@ -45,7 +45,6 @@ func Recv(module BEB.BestEffortBroadcast_Module, ads *[]string, messages *[]stri
 
 		// Verifica se a menssagem recebida é de um novo usuario
 		if recvMessage.Message[0:2] == "PP" && aux {
-			//fmt.Println("Teste")
 			*ads = append((*ads), recvMessage.Message[2:])
 
 			sendPara := BEB.BestEffortBroadcast_Req_Message{
@@ -53,15 +52,19 @@ func Recv(module BEB.BestEffortBroadcast_Module, ads *[]string, messages *[]stri
 				Message:   recvMessage.Message}
 			module.Req <- sendPara
 
-			for i:=0; i<len((*ads))-2; i++{
+			time.Sleep(100 * time.Millisecond)
+
+			for i:=0; i<len((*ads)); i++{
+				
 				sendAdd := BEB.BestEffortBroadcast_Req_Message{
 					Addresses: (*ads)[len((*ads))-1 : len((*ads))],
-					Message:   (*ads)[i+1]}
+					Message:  "PP"+(*ads)[i]}
 				module.Req <- sendAdd
-				//for i:=0; i<1000; i++{}
+
+				time.Sleep(100 * time.Millisecond)
 	
 			}
-			/*fmt.Println("len: ", len(*messages))
+
 			for i := 0; i < len(*messages); i++{
 				sendHist := BEB.BestEffortBroadcast_Req_Message{
 					Addresses: (*ads)[len((*ads))-1 : len((*ads))],
@@ -69,9 +72,9 @@ func Recv(module BEB.BestEffortBroadcast_Module, ads *[]string, messages *[]stri
 
 				module.Req <- sendHist
 
-				//time.Sleep(1000 * time.Millisecond)
+				time.Sleep(100 * time.Millisecond)
 				//for i:=0; i<500; i++{}
-			}*/
+			}
 		}else{
 			*messages = append(*messages, (recvMessage.From + ":" + recvMessage.Message))
 			fmt.Println(recvMessage.From, ": ", recvMessage.Message)
