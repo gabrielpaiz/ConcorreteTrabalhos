@@ -38,8 +38,6 @@ func Recv(module BEB.BestEffortBroadcast_Module, ads *[]string, messages *[]stri
 
 		//Verifica se o endereço já existe no vetor ads
 		for i := 1; i < len(*ads); i++ {
-			//fmt.Println("mesage[1:]: ", recvMessage.Message[2:])
-			//fmt.Println("ads[i]: ", (*ads)[i])
 			if (*ads)[i] == recvMessage.Message[2:] {
 				aux = false
 			}
@@ -55,18 +53,25 @@ func Recv(module BEB.BestEffortBroadcast_Module, ads *[]string, messages *[]stri
 				Message:   recvMessage.Message}
 			module.Req <- sendPara
 
-			fmt.Println("len: ", len(*messages))
+			for i:=0; i<len((*ads))-2; i++{
+				sendAdd := BEB.BestEffortBroadcast_Req_Message{
+					Addresses: (*ads)[len((*ads))-1 : len((*ads))],
+					Message:   (*ads)[i+1]}
+				module.Req <- sendAdd
+				//for i:=0; i<1000; i++{}
+	
+			}
+			/*fmt.Println("len: ", len(*messages))
 			for i := 0; i < len(*messages); i++{
-				fmt.Println("entri no for do historico")
 				sendHist := BEB.BestEffortBroadcast_Req_Message{
 					Addresses: (*ads)[len((*ads))-1 : len((*ads))],
 					Message: (*messages)[i]}
 
 				module.Req <- sendHist
 
-				//time.Sleep(100 * time.Millisecond)
+				//time.Sleep(1000 * time.Millisecond)
 				//for i:=0; i<500; i++{}
-			}
+			}*/
 		}else{
 			*messages = append(*messages, (recvMessage.From + ":" + recvMessage.Message))
 			fmt.Println(recvMessage.From, ": ", recvMessage.Message)
